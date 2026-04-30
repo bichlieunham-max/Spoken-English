@@ -1,0 +1,110 @@
+<view class="page">
+  <view class="hero">
+    <text class="eyebrow">Spoken English</text>
+    <text class="title">把中文句子练成自然英文口语</text>
+  </view>
+
+  <view class="panel">
+    <view class="section-head">
+      <view>
+        <text class="label">Daily speaking</text>
+        <text class="heading">输入你想说的话</text>
+      </view>
+      <button class="ghost" size="mini" bindtap="useSample">换一句</button>
+    </view>
+
+    <textarea class="source" value="{{sourceText}}" bindinput="onSourceInput" placeholder="例如：我今天有点累，但我还是想把英语口语练一下。" />
+
+    <view class="picker-grid">
+      <picker mode="selector" range="{{scenarioOptions}}" range-key="label" bindchange="onScenarioChange">
+        <view class="picker-box">
+          <text>场景</text>
+          <text>{{currentScenario.label}}</text>
+        </view>
+      </picker>
+      <picker mode="selector" range="{{accentOptions}}" range-key="label" bindchange="onAccentChange">
+        <view class="picker-box">
+          <text>口音</text>
+          <text>{{currentAccent.label}}</text>
+        </view>
+      </picker>
+      <picker mode="selector" range="{{rateOptions}}" range-key="label" bindchange="onRateChange">
+        <view class="picker-box">
+          <text>语速</text>
+          <text>{{currentRate.label}}</text>
+        </view>
+      </picker>
+    </view>
+
+    <view class="button-row">
+      <button class="primary" bindtap="generateSpoken">生成自然口语</button>
+      <button class="secondary" bindtap="speakText">播放原句</button>
+    </view>
+  </view>
+
+  <view class="panel">
+    <view class="card-title">
+      <text class="heading">国外日常说法</text>
+      <text class="pill">{{currentScenario.label}}</text>
+    </view>
+    <text class="spoken">{{spokenText}}</text>
+  </view>
+
+  <view class="panel">
+    <view class="card-title">
+      <text class="heading">发音技巧</text>
+      <text class="pill">连读/略读</text>
+    </view>
+    <block wx:for="{{tips}}" wx:key="title">
+      <view class="tip {{item.kind}}">
+        <text class="tip-title">{{item.title}}</text>
+        <text class="tip-body">{{item.body}}</text>
+      </view>
+    </block>
+  </view>
+
+  <view class="panel">
+    <view class="card-title">
+      <text class="heading">跟读录音</text>
+      <text class="pill">{{recordState}}</text>
+    </view>
+    <text class="muted">小程序使用 wx.getRecorderManager() 录制你的英文跟读。自动评分需要云函数或后端语音识别接口。</text>
+    <view class="button-row">
+      <button class="primary" bindtap="startRecord">开始录音</button>
+      <button class="secondary" bindtap="stopRecord">停止</button>
+      <button class="secondary" bindtap="playRecord" disabled="{{!recordPath}}">回放</button>
+    </view>
+    <view class="analysis">
+      <text>{{analysisText}}</text>
+    </view>
+  </view>
+
+  <view class="panel">
+    <view class="section-head">
+      <view>
+        <text class="label">AI conversation</text>
+        <text class="heading">英文交流窗口</text>
+      </view>
+      <button class="ghost" size="mini" bindtap="newRoom">新窗口</button>
+    </view>
+
+    <scroll-view class="tabs" scroll-x>
+      <block wx:for="{{rooms}}" wx:key="id">
+        <button class="tab {{item.id === activeRoomId ? 'active' : ''}}" data-id="{{item.id}}" bindtap="switchRoom">{{item.name}}</button>
+      </block>
+    </scroll-view>
+
+    <scroll-view class="chat-log" scroll-y scroll-into-view="{{lastMessageId}}">
+      <block wx:for="{{activeMessages}}" wx:key="id">
+        <view id="{{item.id}}" class="message {{item.from}}">
+          <text>{{item.text}}</text>
+        </view>
+      </block>
+    </scroll-view>
+
+    <view class="compose">
+      <input value="{{chatInput}}" bindinput="onChatInput" placeholder="Type in English..." />
+      <button class="primary send" bindtap="sendChat">发送</button>
+    </view>
+  </view>
+</view>
