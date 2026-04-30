@@ -38,6 +38,8 @@ const fallbackByScenario = {
 };
 
 const phraseTranslations = [
+  ["练习羽毛球", "I'm practicing badminton"],
+  ["练羽毛球", "I'm practicing badminton"],
   ["我今天进行了羽毛球训练", "I had badminton training today"],
   ["今天进行了羽毛球训练", "I had badminton training today"],
   ["我今天训练了羽毛球", "I practiced badminton today"],
@@ -212,7 +214,9 @@ function speak(text = spokenText.textContent, lang = accentSelect.value, rate = 
     return;
   }
   speechSynthesis.cancel();
-  const cleanText = hasChinese(text) ? translateToEnglish(text, scenarioSelect.value) : text;
+  const cleanText = (hasChinese(text) ? translateToEnglish(text, scenarioSelect.value) : text)
+    .replace(/^What I mean is,\s*/i, "")
+    .trim();
   const utterance = new SpeechSynthesisUtterance(cleanText);
   utterance.lang = lang;
   utterance.rate = Math.max(0.55, Math.min(1.2, rate * 0.96));
