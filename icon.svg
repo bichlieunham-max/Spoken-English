@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Spoken English icon">
+  <rect width="128" height="128" rx="28" fill="#0f766e"/>
+  <path d="M29 36c0-8 7-15 15-15h40c8 0 15 7 15 15v24c0 8-7 15-15 15H58L38 94c-3 3-9 1-9-4V36Z" fill="#fff"/>
+  <path d="M44 45h40M44 58h28" stroke="#0f766e" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="86" cy="87" r="17" fill="#f4b63f"/>
+  <path d="M79 87h14M86 80v14" stroke="#13201f" stroke-width="6" stroke-linecap="round"/>
+</svg>
