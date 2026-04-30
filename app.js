@@ -29,13 +29,57 @@ const samples = [
 ];
 
 const fallbackByScenario = {
-  casual: "What I mean is, {text}.",
-  work: "What I'd like to say is that {text}.",
-  travel: "Could you help me with this? {text}.",
-  study: "I want to explain it like this: {text}.",
-  history: "From my understanding, {text}.",
-  comfort: "I hear you. Honestly, {text}."
+  casual: "{text}",
+  work: "{text}",
+  travel: "{text}",
+  study: "{text}",
+  history: "{text}",
+  comfort: "{text}"
 };
+
+const phraseTranslations = [
+  ["我今天进行了羽毛球训练", "I had badminton training today"],
+  ["今天进行了羽毛球训练", "I had badminton training today"],
+  ["我今天训练了羽毛球", "I practiced badminton today"],
+  ["今天训练了羽毛球", "I practiced badminton today"],
+  ["我今天打了羽毛球", "I played badminton today"],
+  ["今天打了羽毛球", "I played badminton today"],
+  ["我想练习英语口语", "I want to practice speaking English"],
+  ["我想练英语口语", "I want to practice my spoken English"],
+  ["我今天有点累", "I'm a bit tired today"],
+  ["我刚才没听清楚", "I didn't quite catch that"],
+  ["你可以再说一遍吗", "Could you say that again"],
+  ["我想表达我的观点", "I want to share my point"],
+  ["不想听起来太强硬", "I don't want to sound too forceful"]
+];
+
+const wordTranslations = [
+  ["今天", "today"],
+  ["明天", "tomorrow"],
+  ["昨天", "yesterday"],
+  ["我", "I"],
+  ["我们", "we"],
+  ["进行了", "had"],
+  ["进行", "have"],
+  ["训练", "training"],
+  ["练习", "practice"],
+  ["学习", "study"],
+  ["打", "play"],
+  ["羽毛球", "badminton"],
+  ["篮球", "basketball"],
+  ["足球", "soccer"],
+  ["英语", "English"],
+  ["口语", "speaking"],
+  ["工作", "work"],
+  ["会议", "meeting"],
+  ["旅行", "travel"],
+  ["历史", "history"],
+  ["文化", "culture"],
+  ["开心", "happy"],
+  ["难过", "sad"],
+  ["紧张", "nervous"],
+  ["累", "tired"]
+];
 
 const rooms = [
   {
@@ -87,6 +131,51 @@ function normalizeText(text) {
     .trim();
 }
 
+function hasChinese(text) {
+  return /[\u3400-\u9fff]/.test(text);
+}
+
+function polishByScenario(text, scenario) {
+  const clean = text.replace(/\s+/g, " ").replace(/\s+([,.!?])/g, "$1").trim();
+  if (!clean) return "I'd like to practice speaking English today.";
+
+  const first = clean.charAt(0).toUpperCase() + clean.slice(1);
+  const sentence = /[.!?]$/.test(first) ? first : `${first}.`;
+
+  if (scenario === "work") return sentence.replace(/^I had /, "I completed ").replace(/^I played /, "I practiced ");
+  if (scenario === "study") return sentence.replace(/^I had /, "I did ").replace(/^I played /, "I practiced ");
+  if (scenario === "comfort") return `I did my best today. ${sentence}`;
+  return sentence;
+}
+
+function translateToEnglish(input, scenario) {
+  let text = input.trim().replace(/[。！？；，]/g, " ").replace(/\s+/g, " ");
+  if (!text) return "I'd like to practice speaking English today.";
+  if (!hasChinese(text)) return polishByScenario(text, scenario);
+
+  const direct = phraseTranslations.find(([zh]) => text.includes(zh));
+  if (direct) return polishByScenario(direct[1], scenario);
+
+  let translated = text;
+  wordTranslations.forEach(([zh, en]) => {
+    translated = translated.replaceAll(zh, ` ${en} `);
+  });
+  translated = translated.replace(/[\u3400-\u9fff]/g, " ").replace(/\s+/g, " ").trim();
+
+  if (!translated || translated.length < 2) {
+    return "I want to say this in natural English, but I need a more specific translation.";
+  }
+
+  translated = translated
+    .replace(/\bI today had\b/i, "I had")
+    .replace(/\bI today practiced\b/i, "I practiced")
+    .replace(/\bhad badminton training today\b/i, "I had badminton training today")
+    .replace(/\bI had badminton training\b/i, "I had badminton training");
+
+  if (!/\btoday\b/i.test(translated) && /今天/.test(input)) translated += " today";
+  return polishByScenario(translated, scenario);
+}
+
 function generateSpokenEnglish() {
   const raw = sourceText.value.trim();
   const scenario = scenarioSelect.value;
@@ -94,11 +183,8 @@ function generateSpokenEnglish() {
   let text = match ? match[scenario] : "";
 
   if (!text) {
-    const cleaned = raw
-      .replace(/[。！？；，]/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-    text = fallbackByScenario[scenario].replace("{text}", cleaned || "I'd like to practice speaking English today");
+    const translated = translateToEnglish(raw, scenario);
+    text = fallbackByScenario[scenario].replace("{text}", translated);
   }
 
   spokenText.textContent = text;
@@ -109,9 +195,15 @@ function generateSpokenEnglish() {
 
 function pickVoice(lang) {
   const voices = speechSynthesis.getVoices();
+  const expressiveNames = lang === "en-US"
+    ? ["Samantha", "Ava", "Jenny", "Aria", "Allison", "Nicky"]
+    : ["Serena", "Daniel", "Kate", "Oliver", "Libby", "Martha"];
+  const expressive = voices.find((voice) =>
+    voice.lang === lang && expressiveNames.some((name) => voice.name.includes(name))
+  );
   const exact = voices.find((voice) => voice.lang === lang);
   const partial = voices.find((voice) => voice.lang && voice.lang.startsWith(lang.slice(0, 2)));
-  return exact || partial || null;
+  return expressive || exact || partial || null;
 }
 
 function speak(text = spokenText.textContent, lang = accentSelect.value, rate = Number(rateSelect.value)) {
@@ -120,10 +212,12 @@ function speak(text = spokenText.textContent, lang = accentSelect.value, rate = 
     return;
   }
   speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
+  const cleanText = hasChinese(text) ? translateToEnglish(text, scenarioSelect.value) : text;
+  const utterance = new SpeechSynthesisUtterance(cleanText);
   utterance.lang = lang;
-  utterance.rate = rate;
-  utterance.pitch = lang === "en-GB" ? 0.96 : 1;
+  utterance.rate = Math.max(0.55, Math.min(1.2, rate * 0.96));
+  utterance.pitch = lang === "en-GB" ? 1.02 : 1.05;
+  utterance.volume = 1;
   const voice = pickVoice(lang);
   if (voice) utterance.voice = voice;
   speechSynthesis.speak(utterance);
