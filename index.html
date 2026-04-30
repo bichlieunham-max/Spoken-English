@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f766e" />
+    <title>Spoken English - 口语练习 App</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icon.svg" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">Spoken English</p>
+          <h1>把中文句子练成自然英文口语</h1>
+        </div>
+        <button id="installButton" class="icon-action" type="button" title="安装到手机桌面" aria-label="安装到手机桌面">
+          ⤓
+        </button>
+      </header>
+
+      <main class="main-layout">
+        <section class="practice-panel" aria-label="口语练习">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Daily speaking</p>
+              <h2>输入你想说的话</h2>
+            </div>
+            <button id="sampleButton" class="ghost-button" type="button">换一句</button>
+          </div>
+
+          <label class="field-label" for="sourceText">中文或直译英文</label>
+          <textarea id="sourceText" rows="5" placeholder="例如：我今天有点累，但我还是想把英语口语练一下。"></textarea>
+
+          <div class="control-grid">
+            <label>
+              场景
+              <select id="scenarioSelect">
+                <option value="casual">日常聊天</option>
+                <option value="work">工作沟通</option>
+                <option value="travel">旅行问路</option>
+                <option value="study">课堂讨论</option>
+                <option value="history">历史文化交流</option>
+                <option value="comfort">安慰和情绪支持</option>
+              </select>
+            </label>
+            <label>
+              口音
+              <select id="accentSelect">
+                <option value="en-US">美式发音</option>
+                <option value="en-GB">英式发音</option>
+              </select>
+            </label>
+            <label>
+              语速
+              <select id="rateSelect">
+                <option value="0.65">0.65x 慢速拆解</option>
+                <option value="0.8">0.8x 跟读</option>
+                <option value="1" selected>1.0x 自然</option>
+                <option value="1.15">1.15x 快速聊天</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="action-row">
+            <button id="translateButton" class="primary-button" type="button">生成自然口语</button>
+            <button id="speakButton" class="secondary-button" type="button">播放文本</button>
+            <button id="loopButton" class="secondary-button" type="button">反复播放</button>
+          </div>
+
+          <section class="result-card" aria-live="polite">
+            <div class="card-title-row">
+              <h3>国外日常说法</h3>
+              <span id="toneTag">casual</span>
+            </div>
+            <p id="spokenText" class="spoken-text">点击“生成自然口语”，这里会给出更像美国、英国日常交流中的说法。</p>
+            <div class="mini-actions">
+              <button data-copy="spokenText" class="text-button" type="button">复制</button>
+              <button id="compareAccentButton" class="text-button" type="button">美式/英式各读一遍</button>
+            </div>
+          </section>
+        </section>
+
+        <section class="coach-panel" aria-label="发音教练">
+          <div class="section-head compact">
+            <div>
+              <p class="eyebrow">Pronunciation coach</p>
+              <h2>发音技巧拆解</h2>
+            </div>
+          </div>
+
+          <div id="tipList" class="tip-list"></div>
+
+          <div class="record-card">
+            <div class="card-title-row">
+              <h3>跟读分析</h3>
+              <span id="supportBadge">检测中</span>
+            </div>
+            <p class="muted">按下录音后读出上面的英文。浏览器会把你的发音转成文字，本 App 会对比漏读、重读和易错词。</p>
+            <div class="action-row">
+              <button id="recordButton" class="primary-button" type="button">开始跟读</button>
+              <button id="stopRecordButton" class="secondary-button" type="button">停止</button>
+            </div>
+            <div id="analysisBox" class="analysis-box">
+              <strong>等待跟读</strong>
+              <span>建议先用 0.65x 慢放，再用 1.0x 跟读。</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="chat-panel" aria-label="英文聊天练习">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">AI conversation rooms</p>
+              <h2>多窗口英文交流</h2>
+            </div>
+            <button id="newRoomButton" class="ghost-button" type="button">新窗口</button>
+          </div>
+
+          <div id="roomTabs" class="room-tabs" role="tablist"></div>
+          <div id="chatLog" class="chat-log" aria-live="polite"></div>
+          <div class="chat-compose">
+            <input id="chatInput" type="text" placeholder="Type in English, or ask about history, travel, culture..." />
+            <button id="sendChatButton" class="primary-button" type="button">发送</button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
