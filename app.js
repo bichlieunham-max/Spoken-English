@@ -60,6 +60,8 @@ let activeRoomId = rooms[0].id;
 let loopTimer = null;
 let recognition = null;
 let deferredInstallPrompt = null;
+let mediaRecorder = null;
+let recordedChunks = [];
 
 const $ = (id) => document.getElementById(id);
 
@@ -72,6 +74,7 @@ const toneTag = $("toneTag");
 const tipList = $("tipList");
 const analysisBox = $("analysisBox");
 const supportBadge = $("supportBadge");
+const playbackAudio = $("playbackAudio");
 const roomTabs = $("roomTabs");
 const chatLog = $("chatLog");
 const chatInput = $("chatInput");
@@ -204,9 +207,9 @@ function startLoop() {
 function setupRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
-    supportBadge.textContent = "需 Chrome";
-    supportBadge.style.background = "#fff1ef";
-    supportBadge.style.color = "#9f3f36";
+    supportBadge.textContent = "iPhone 回放";
+    supportBadge.style.background = "#fff7e6";
+    supportBadge.style.color = "#8a5a12";
     return;
   }
 
@@ -222,6 +225,34 @@ function setupRecognition() {
   recognition.onerror = (event) => {
     analysisBox.innerHTML = `<strong>录音没有完成</strong><span>${event.error}。请确认浏览器允许麦克风权限。</span>`;
   };
+}
+
+async function startRecordingFallback() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
+    analysisBox.innerHTML = "<strong>当前浏览器不能录音</strong><span>苹果手机请用 Safari 打开，并在地址栏允许麦克风权限。</span>";
+    return;
+  }
+
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  recordedChunks = [];
+  mediaRecorder = new MediaRecorder(stream);
+  mediaRecorder.ondataavailable = (event) => {
+    if (event.data.size > 0) recordedChunks.push(event.data);
+  };
+  mediaRecorder.onstop = () => {
+    stream.getTracks().forEach((track) => track.stop());
+    const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || "audio/mp4" });
+    playbackAudio.src = URL.createObjectURL(blob);
+    playbackAudio.style.display = "block";
+    analysisBox.innerHTML = `
+      <strong>已录下你的跟读</strong>
+      <span>iPhone Safari 暂不稳定支持浏览器内置英文语音识别，所以这里提供录音回放训练。</span>
+      <span>回听时重点检查：重音词是否更响、to/of/and 是否轻读、want to / kind of 是否连起来。</span>
+      <span>需要自动评分时，要接入后端语音识别或做成小程序云函数版本。</span>
+    `;
+  };
+  mediaRecorder.start();
+  analysisBox.innerHTML = "<strong>正在录音</strong><span>读完后按“停止”，然后回放对比原句。</span>";
 }
 
 function analyzeSpeech(transcript) {
@@ -322,9 +353,16 @@ $("recordButton").addEventListener("click", () => {
     recognition.lang = accentSelect.value;
     recognition.start();
     analysisBox.innerHTML = "<strong>正在听你跟读</strong><span>读完后可以按停止，或等待浏览器自动结束。</span>";
+  } else {
+    startRecordingFallback().catch((error) => {
+      analysisBox.innerHTML = `<strong>录音没有开始</strong><span>${error.message}。请确认浏览器允许麦克风权限。</span>`;
+    });
   }
 });
-$("stopRecordButton").addEventListener("click", () => recognition && recognition.stop());
+$("stopRecordButton").addEventListener("click", () => {
+  if (recognition) recognition.stop();
+  if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop();
+});
 $("sendChatButton").addEventListener("click", sendChat);
 $("newRoomButton").addEventListener("click", addRoom);
 $("installButton").addEventListener("click", installApp);
