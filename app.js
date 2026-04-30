@@ -40,6 +40,8 @@ const fallbackByScenario = {
 const phraseTranslations = [
   ["练习羽毛球", "I'm practicing badminton"],
   ["练羽毛球", "I'm practicing badminton"],
+  ["今天进行羽毛球训练", "I had badminton training today"],
+  ["我今天进行羽毛球训练", "I had badminton training today"],
   ["我今天进行了羽毛球训练", "I had badminton training today"],
   ["今天进行了羽毛球训练", "I had badminton training today"],
   ["我今天训练了羽毛球", "I practiced badminton today"],
@@ -113,7 +115,6 @@ const $ = (id) => document.getElementById(id);
 
 const sourceText = $("sourceText");
 const scenarioSelect = $("scenarioSelect");
-const accentSelect = $("accentSelect");
 const rateSelect = $("rateSelect");
 const spokenText = $("spokenText");
 const toneTag = $("toneTag");
@@ -208,13 +209,17 @@ function pickVoice(lang) {
   return expressive || exact || partial || null;
 }
 
-function speak(text = spokenText.textContent, lang = accentSelect.value, rate = Number(rateSelect.value)) {
+let lastAccent = "en-US";
+
+function speak(text = spokenText.textContent, lang = lastAccent, rate = Number(rateSelect.value)) {
   if (!("speechSynthesis" in window)) {
     analysisBox.innerHTML = "<strong>当前浏览器不支持朗读</strong><span>请用 Chrome、Edge 或 Safari 打开。</span>";
     return;
   }
+  lastAccent = lang;
   speechSynthesis.cancel();
-  const cleanText = (hasChinese(text) ? translateToEnglish(text, scenarioSelect.value) : text)
+  const visibleText = spokenText.textContent.trim();
+  const cleanText = (hasChinese(visibleText) ? translateToEnglish(visibleText, scenarioSelect.value) : visibleText)
     .replace(/^What I mean is,\s*/i, "")
     .trim();
   const utterance = new SpeechSynthesisUtterance(cleanText);
@@ -313,7 +318,7 @@ function setupRecognition() {
 
   supportBadge.textContent = "可用";
   recognition = new SpeechRecognition();
-  recognition.lang = accentSelect.value;
+  recognition.lang = lastAccent;
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
   recognition.onresult = (event) => {
@@ -442,13 +447,14 @@ $("sampleButton").addEventListener("click", () => {
 });
 
 $("translateButton").addEventListener("click", generateSpokenEnglish);
-$("speakButton").addEventListener("click", () => speak());
+$("speakUsButton").addEventListener("click", () => speak(spokenText.textContent, "en-US"));
+$("speakUkButton").addEventListener("click", () => speak(spokenText.textContent, "en-GB"));
 $("loopButton").addEventListener("click", startLoop);
 $("compareAccentButton").addEventListener("click", compareAccent);
 $("recordButton").addEventListener("click", () => {
   if (!recognition) setupRecognition();
   if (recognition) {
-    recognition.lang = accentSelect.value;
+    recognition.lang = lastAccent;
     recognition.start();
     analysisBox.innerHTML = "<strong>正在听你跟读</strong><span>读完后可以按停止，或等待浏览器自动结束。</span>";
   } else {
@@ -485,7 +491,7 @@ document.addEventListener("click", (event) => {
 });
 
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("./sw.js").catch(() => {});
+  navigator.serviceWorker.getRegistrations().then((items) => items.forEach((item) => item.unregister())).catch(() => {});
 }
 
 sourceText.value = samples[0].zh;
