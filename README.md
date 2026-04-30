@@ -29,3 +29,9 @@ http://127.0.0.1:8000/
 ## 说明
 
 当前版本是纯前端原型，使用浏览器内置 `speechSynthesis` 和 `SpeechRecognition`。正式上线后可以接入后端 AI 服务，提供更准确的翻译、语音评分、音素级发音诊断和长期学习记录。
+
+## 微信小程序版本
+
+仓库内的 `miniprogram/` 目录提供了微信小程序原型，包含 `app.json`、`pages/index/index.wxml`、`index.wxss`、`index.js`，录音使用 `wx.getRecorderManager()`。
+
+小程序里的自动评分和文本朗读需要接入云函数或后端服务，详见 `miniprogram/README.md`。
