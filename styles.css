@@ -298,6 +298,12 @@ select {
   line-height: 1.55;
 }
 
+.playback-audio {
+  display: none;
+  width: 100%;
+  margin-top: 12px;
+}
+
 .chat-panel {
   min-height: 450px;
 }
